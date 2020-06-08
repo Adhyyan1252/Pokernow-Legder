@@ -4,7 +4,7 @@
 var checkExist = setInterval(function() {
 	var log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray");
    if (log_button.length) {
-      log_button[0].addEventListener("click", buttonClicked);	
+      log_button[0].addEventListener("click", buttonClicked, false);	
       console.log("EXISTS");
       clearInterval(checkExist);
    }
@@ -15,16 +15,17 @@ function buttonClicked(){
 	setTimeout(function(){
 		//add the button 
 		console.log("BUTTON CLICKED");
-		var footer = document.getElementsByClassName("modal-footer")[0];
+		var footer = document.querySelector(".modal-footer").children[0];
 		var button = document.createElement('button');
 		console.log(footer);
 		button.type = "button";
 		button.className = "button-1 green small-button";
 		button.innerHTML = "Ledger";
-		//footer.innerHTML += "&nbsp";
-		footer.insertBefore(button, footer.childNodes[0]);
-		button.addEventListener("click", displayLedger);
-	}, 0)
+		var space = document.createTextNode( '\u00A0' ) 
+		footer.append(space);
+		footer.append(button);
+		button.addEventListener("click", displayLedger, false);
+	}, 10)
 	//add the button the modal thing
 }
 
@@ -231,9 +232,6 @@ function process(log, verbose=false, multiplier=1){
 			if(u == undefined){
 				console.log("Couldnt find user by name: " + curn);
 			}else{
-
-				
-
 				u.current = curv;
 			}
 		}
@@ -292,12 +290,16 @@ function getTableData(users){
 
 	data.push(cur);
 	data.push(total);
-	return data;
+	return {data : data, inHand : curSum};
 }
 
 function addToTable(users){
 	var table = document.createElement("table");
-	var data = getTableData(users);
+	var ret = getTableData(users);
+	var data = ret.data;
+	var inHand = ret.inHand;
+
+
 	table.style = "width: 100%";
 	for(let ele of data){
 		let row = table.insertRow();
@@ -323,7 +325,73 @@ function addToTable(users){
 	b.style = "height : 100%;";
 	b.innerHTML = "";
 	b.appendChild(table);
+
+	if(inHand == 0){
+		var button = document.createElement('button');
+		button.type = "button";
+		button.className = "button-1 green small-button";
+		button.innerHTML = "Generate Transactions";
+		b.appendChild(button);
+		button.users = users;
+		button.addEventListener("click", generateTransactions, false);
+	}
 }
 
+function generateTransactions(evt){
+	var credit = [];
+	var debit = [];
+	var users = evt.currentTarget.users;
+	evt.currentTarget.parentNode.removeChild(evt.currentTarget);
+	var sum = 0;
+	for(let uid in users){
+		let u = users[uid];
+		if(u.net() > 0)
+			credit.push({name : u.get_one_name(), amt : u.net()});
+		else if(u.net() < 0)
+			debit.push({name : u.get_one_name(), amt : -u.net()});
+		sum += u.net();
+	}
 
+	if(sum != 0){
+		let b = document.getElementsByClassName("modal-body")[0]
+		b.innerHTML += "<p>Sum doesn't add upto 0</p>";
+		return;
+	}
+
+
+	credit.sort(function(a, b){
+		return a.amt - b.amt;
+	});
+
+	debit.sort(function(a, b){
+		return a.amt - b.amt;
+	})
+
+	var t = [];
+	while(credit.length > 0 && debit.length > 0){
+		var c = credit.pop();
+		var d = debit.pop();
+		var m = Math.min(c.amt, d.amt);
+		t.push({sender: d.name, receiver : c.name, amt : m});
+		c.amt -= m;
+		d.amt -= m;
+		if(c.amt > 0) credit.push(c);
+		if(d.amt > 0) debit.push(d);
+	}
+
+	var text = document.createElement("div");
+	text.className = "transactions";
+	console.log(t);
+	for (let a of t){
+		console.log(a);
+		var p = document.createElement("p");
+		p.innerHTML += a.sender + " owes " + a.receiver + " " + a.amt;
+		text.appendChild(p);
+	}
+
+	let b = document.getElementsByClassName("modal-body")[0]
+	b.appendChild(document.createElement("br"));
+	b.appendChild(text);
+
+}
 
