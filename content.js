@@ -1,14 +1,18 @@
 
 
 //entry point
-var checkExist = setInterval(function() {
-	var log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray");
-   if (log_button.length) {
-      log_button[0].addEventListener("click", buttonClicked, false);	
-      console.log("EXISTS");
-      clearInterval(checkExist);
-   }
-}, 100); // check every 100ms
+var log_button;
+var checkExist = setInterval(function () {
+  if (!document.body.contains(log_button)) {
+  	console.log("FINDING LOG BUTTON");
+    try {
+      log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray")[0];
+      log_button.addEventListener("click", buttonClicked, false);
+    } catch {
+      log_button = null;
+    }
+  }
+}, 1000); // check every 1000ms
 
 
 function buttonClicked(){
@@ -17,7 +21,7 @@ function buttonClicked(){
 		console.log("BUTTON CLICKED");
 		var footer = document.querySelector(".modal-footer").children[0];
 		var button = document.createElement('button');
-		console.log(footer);
+
 		button.type = "button";
 		button.className = "button-1 green small-button";
 		button.innerHTML = "Ledger";
