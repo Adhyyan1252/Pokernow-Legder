@@ -43,7 +43,7 @@ var checkExist = setInterval(function () {
 //Adds Ledger button to Log page
 function logButtonClicked(){
 	setTimeout(function(){
-		//add the button 
+		//add the button
 		console.log("BUTTON CLICKED");
 		var footer = document.querySelector(".modal-footer").children[0];
 
@@ -53,7 +53,7 @@ function logButtonClicked(){
 		ledgerButton.innerHTML = "Ledger";
 		ledgerButton.addEventListener("click", startLedger, false);
 
-		
+
 		footer.append(document.createTextNode( '\u00A0' ));
 		footer.append(ledgerButton);
 	}, 10)
@@ -97,18 +97,18 @@ function getLog(lastTime, minTime){
 
 		if(lastTime > minTime){
 			getLog(lastTime, minTime);
-		}else{ 
+		}else{
 			log = log.reverse();
-			process(log, false, 1);	
+			process(log, false, 1);
 		}
-	}		
+	}
 	}
 	if(minTime == undefined){
 		xhttp.open("GET", window.location.href + "/log?after_at=&before_at=&mm=true");
 	}else{
 		xhttp.open("GET", window.location.href + "/log?after_at=&before_at=" + lastTime + "&mm=true");
 	}
-	xhttp.send();			
+	xhttp.send();
 }
 
 //gets a user from the users array by the user_id.
@@ -262,14 +262,14 @@ function displayAllLedger(users, old_game, gameId){
 	b.style = "height : 100%;";
 	b.innerHTML = "";
 
-	function displayTransactionsButton(disabled=false){	
+	function displayTransactionsButton(disabled=false){
 		// /console.log(disabled);
 		var button = document.createElement('button');
 		button.type = "button";
 		button.className = "button-1 " + (disabled?"gray":"green") + " small-button";
 		button.innerHTML = "Generate Transactions";
-		button.users = users;	
-		button.addEventListener("click", generateTransactions, false);	
+		button.users = users;
+		button.addEventListener("click", generateTransactions, false);
 		if(disabled)
 			button.setAttribute("disabled", "");
 		return button;
@@ -282,13 +282,13 @@ function displayAllLedger(users, old_game, gameId){
 		button.id = "save-game";
 		button.innerHTML = "Save Game";
 		button.users = users;
-		button.addEventListener("click", saveGame, false);		
+		button.addEventListener("click", saveGame, false);
 		if(disabled)
 			button.setAttribute("disabled", "");
 
 		return button;
 	}
-	
+
 	function displayPreviousGamesButton(){
 		var previousButton = document.createElement('button');
 		previousButton.type = "button";
@@ -322,18 +322,18 @@ function displayAllLedger(users, old_game, gameId){
 
 		b.append(displaySaveButton(inHand!=0));
 		b.appendChild(document.createTextNode( '\u00A0' ));
-		
+
 		b.append(displayPreviousGamesButton());
-		b.appendChild(document.createTextNode( '\u00A0' ));	
+		b.appendChild(document.createTextNode( '\u00A0' ));
 	}
-	
+
 }
 
 //saves current game to local storage
 function saveGame(evt){
 	var users = evt.currentTarget.users;
 	evt.currentTarget.innerHTML = "Save Again";
-	var gameId = window.location.href.split("/").pop();	
+	var gameId = window.location.href.split("/").pop();
 	console.log("Saved game: " + gameId);
 	chrome.storage.sync.set({[gameId]: {users: users, date:(new Date()).toLocaleString()}}, function() {
       console.log(users);
@@ -375,11 +375,11 @@ function getTableData(users, old_game=false){
 		}
 		curSum += parseInt(document.querySelector(".table-pot-size").innerHTML);
 		total_current += curSum;
-		total_net += curSum;	
+		total_net += curSum;
 		var cur = ["", "<b>Current Hand</b>", "", "", curSum, "", curSum, "-"]
 		data.push(cur);
 	}
-	
+
 	var total = ["", "<b>Total</b>", "<b>"+total_buyin+"</b>", "<b>"+total_buyout+"</b>",
 	"<b>"+total_current +"</b>", "<b>"+total_transfer+"</b>", "<b>"+total_net+"</b>", "<b>"+total_players+"</b>"];
 
@@ -397,6 +397,8 @@ function displayLedgerTable(users, old_game=false){
 	var data = ret.data;
 	var inHand = ret.inHand;
 
+	// sort by name
+	data.sort((a, b) => (a[1] > b[1]) ? 1 : -1)
 
 	table.style = "width: 100%";
 	for(let ele of data){
@@ -423,9 +425,9 @@ function displayLedgerTable(users, old_game=false){
 	if(document.querySelector("#ledger-table")){
 		b.replaceChild(tableDiv, document.querySelector("#ledger-table"));
 	}else{
-		b.appendChild(tableDiv);	
+		b.appendChild(tableDiv);
 	}
-	
+
 	return inHand;
 }
 
@@ -482,10 +484,10 @@ function addTransfers(users, old_game=false){
 			console.log(fromUser.get_one_name() + ": " + toUser.get_one_name() + " : " + val);
 			fromUser.transfer -= val;
 			toUser.transfer += val;
-			displayLedgerTable(users, old_game);		
+			displayLedgerTable(users, old_game);
 		}
-			
-		
+
+
 		amt.value = 0;
 	}
 	var transfersDiv = document.createElement("div");
@@ -612,7 +614,7 @@ function displayPreviousGames(items){
 		let bd = new Date(items[b].date);
 		return (ad < bd)?1:((ad == bd)?0:-1);
 	});
-	
+
 	for(let key of sortedKeys){
 
 		let users =  items[key].users;
@@ -654,8 +656,8 @@ function displayPreviousGames(items){
 			startPreviousGames();
 		});
 		row.insertCell().append(deleteButton);
-		
-		
+
+
 		row.children[0].addEventListener("click", function(evt){
 			let curId = evt.currentTarget.parentNode.id;
 			displayAllLedger(items[curId].users, true, curId);
@@ -674,26 +676,26 @@ function displayPreviousGames(items){
 	}
 
 	b.style = "height : 100%;";
-	gameDivs.appendChild(table);	
+	gameDivs.appendChild(table);
 	b.append(gameDivs);
 
-	function displayGoBackButton(){	
+	function displayGoBackButton(){
 		var button = document.createElement('button');
 		button.type = "button";
 		button.className = "button-1 green small-button";
 		button.innerHTML = "Go Back";
-		button.addEventListener("click", startLedger, false);	
+		button.addEventListener("click", startLedger, false);
 		return button;
 	}
 
-	function displaySummaryButton(){	
+	function displaySummaryButton(){
 		var button = document.createElement('button');
 		button.type = "button";
 		button.className = "button-1 green small-button";
 		button.innerHTML = "Summary";
 		button.addEventListener("click", function(){
 			displayAllLedger(makeSummary(items), true, "Summary");
-		}, false);	
+		}, false);
 		return button;
 	}
 	b.append(document.createElement("br"));
@@ -766,4 +768,3 @@ function makeSummary(items){
 	console.log(users);
 	return users;
 }
-
