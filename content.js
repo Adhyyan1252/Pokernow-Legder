@@ -103,10 +103,16 @@ function getLog(lastTime, minTime){
 		}
 	}		
 	}
+
+	var game_url = window.location.href;
+	game_url = game_url.split("?")[0];
+	game_url = game_url.split("#")[0];
+
+
 	if(minTime == undefined){
-		xhttp.open("GET", window.location.href + "/log?after_at=&before_at=&mm=true");
+		xhttp.open("GET", game_url + "/log?after_at=&before_at=&mm=true");
 	}else{
-		xhttp.open("GET", window.location.href + "/log?after_at=&before_at=" + lastTime + "&mm=true");
+		xhttp.open("GET", game_url + "/log?after_at=&before_at=" + lastTime + "&mm=true");
 	}
 	xhttp.send();			
 }
@@ -125,10 +131,10 @@ function get_user(user_id, name, users, merge=true){
 	}else if(merge == true){
 		for(var uid in users){
 			if(users[uid].names.includes(name) || users[uid].id.includes(user_id)){
-				if(users[user_id].names.includes(name) == false)
-					users[user_id].names.push(name);
-				if(users[user_id].id.includes(user_id) == false)
-					users[user_id].id.push(user_id);
+				if(users[uid].names.includes(name) == false)
+					users[uid].names.push(name);
+				if(users[uid].id.includes(user_id) == false)
+					users[uid].id.push(user_id);
 				return users[uid];
 			}
 		}
@@ -176,10 +182,16 @@ function process(log, verbose=false, multiplier=1){
 			var id = name_and_id.split("@")[1];
 			name = name.trim();
 			id = id.trim();
-			var user = get_user(id, name, users);
+			// try{
+				var user = get_user(id, name, users);	
+			// } catch{
+			// 	console.log(id + " : " + name);
+			// 	console.log(users);
+			// }
+			
 
 			if(ent.indexOf("approved") != -1 || ent.indexOf("created") != -1){
-				var value = parseInt(words[words.length-1], 10);
+				var value = parseFloat(words[words.length-1]);
 
 				if(user.buyout == value){
 					sum += value;
@@ -196,7 +208,7 @@ function process(log, verbose=false, multiplier=1){
 				}
 				user.quit = false;
 			}else if(ent.indexOf("quits") != -1){
-				var value = parseInt(words[words.length-1], 10);
+				var value = parseFloat(words[words.length-1]);
 
 				sum -= value;
 				if(verbose){
@@ -205,8 +217,8 @@ function process(log, verbose=false, multiplier=1){
 				user.buyout += value;
 				user.quit = true;
 			}else if(ent.indexOf("updated") != -1){
-				var new_value = parseInt(words[words.length-1], 10);
-				var old_value = parseInt(words[words.length-3], 10);
+				var new_value = parseFloat(words[words.length-1]);
+				var old_value = parseFloat(words[words.length-3]);
 
 				if(verbose){
 					console.log("UPDATE " + name + " : " + old_value +  " -> " + new_value);
@@ -228,8 +240,9 @@ function process(log, verbose=false, multiplier=1){
 		for(let i = 0; i < names.length; i++){
 			let curn = names[i].innerText;
 			let curv = 0;
-			var numb = stacks[i].innerText.match(/\d+/g);
-			for(let c of numb) curv += parseInt(c, 10);
+			//var numb = stacks[i].innerText.match(/\d+/g);
+			var numb = stacks[i].innerText.split("+");
+			for(let c of numb) curv += parseFloat(c);
 			var u = get_user_by_name(curn, users);
 			if(u == undefined){
 				console.log("Couldnt find user by name: " + curn);
@@ -340,6 +353,11 @@ function saveGame(evt){
     });
 }
 
+//rounds the number
+function f(num){
+	return Math.round(num * 100)/100;
+}
+
 //collates information from users list to an array
 //helper function to display data
 function getTableData(users, old_game=false){
@@ -355,7 +373,7 @@ function getTableData(users, old_game=false){
 		var u = users[uid];
 		let id_str = "<abbr title=\"" + u.get_ids() + "\">" + uid + "</abbr>";
 		let name_str = "<abbr title=\"" + u.get_names() + "\">" + u.get_one_name() + "</abbr>";
-		var cur = [id_str, name_str, u.buyin, u.buyout, u.current, u.transfer, u.net(), u.quit?0:1];
+		var cur = [id_str, name_str, f(u.buyin), f(u.buyout), f(u.current), f(u.transfer), f(u.net()), u.quit?0:1];
 		data.push(cur);
 		total_buyin += u.buyin;
 		total_buyout += u.buyout;
@@ -370,21 +388,21 @@ function getTableData(users, old_game=false){
 		var currentHand = document.getElementsByClassName("table-player-bet-value");
 		for(let c of currentHand){
 			if(c.innerHTML != "check"){
-				curSum += parseInt(c.innerHTML, 10);
+				curSum += parseFloat(c.innerHTML);
 			}
 		}
-		curSum += parseInt(document.querySelector(".table-pot-size").innerHTML);
+		curSum += parseFloat(document.querySelector(".table-pot-size").innerHTML);
 		total_current += curSum;
 		total_net += curSum;	
-		var cur = ["", "<b>Current Hand</b>", "", "", curSum, "", curSum, "-"]
+		var cur = ["", "<b>Current Hand</b>", "", "", f(curSum), "", f(curSum), "-"]
 		data.push(cur);
 	}
 	
-	var total = ["", "<b>Total</b>", "<b>"+total_buyin+"</b>", "<b>"+total_buyout+"</b>",
-	"<b>"+total_current +"</b>", "<b>"+total_transfer+"</b>", "<b>"+total_net+"</b>", "<b>"+total_players+"</b>"];
+	var total = ["", "<b>Total</b>", "<b>"+f(total_buyin)+"</b>", "<b>"+f(total_buyout)+"</b>",
+	"<b>"+f(total_current) +"</b>", "<b>"+f(total_transfer)+"</b>", "<b>"+f(total_net)+"</b>", "<b>"+f(total_players)+"</b>"];
 
 	data.push(total);
-	return {data : data, inHand : curSum};
+	return {data : data, inHand : f(curSum)};
 }
 
 //displays ledger table
@@ -477,11 +495,11 @@ function addTransfers(users, old_game=false){
 		let toName = to.options[to.selectedIndex].text;
 		let toUser = get_user_by_name(toName, users);
 
-		let val = parseInt(amt.value, 10);
-		if(Number.isInteger(val)){
+		let val = parseFloat(amt.value);
+		if(Number.isNaN(val) == false){
 			console.log(fromUser.get_one_name() + ": " + toUser.get_one_name() + " : " + val);
-			fromUser.transfer -= val;
-			toUser.transfer += val;
+			fromUser.transfer -= f(val);
+			toUser.transfer += f(val);
 			displayLedgerTable(users, old_game);		
 		}
 			
@@ -518,12 +536,12 @@ function generateTransactions(evt){
 	for(let uid in users){
 		let u = users[uid];
 		if(u.net() > 0)
-			credit.push({name : u.get_one_name(), amt : u.net()});
+			credit.push({name : u.get_one_name(), amt : f(u.net())});
 		else if(u.net() < 0)
-			debit.push({name : u.get_one_name(), amt : -u.net()});
-		sum += u.net();
+			debit.push({name : u.get_one_name(), amt : -f(u.net())});
+		sum += f(u.net());
 	}
-
+	sum = f(sum);
 	if(sum != 0){
 		let b = document.getElementsByClassName("modal-body")[0]
 		b.innerHTML += "<p>Sum doesn't add upto 0</p>";
@@ -543,10 +561,10 @@ function generateTransactions(evt){
 	while(credit.length > 0 && debit.length > 0){
 		var c = credit.pop();
 		var d = debit.pop();
-		var m = Math.min(c.amt, d.amt);
+		var m = f(Math.min(c.amt, d.amt));
 		t.push({sender: d.name, receiver : c.name, amt : m});
-		c.amt -= m;
-		d.amt -= m;
+		c.amt = f(c.amt - m);
+		d.amt = f(d.amt - m);
 		if(c.amt > 0) credit.push(c);
 		if(d.amt > 0) debit.push(d);
 	}
@@ -558,7 +576,7 @@ function generateTransactions(evt){
 	for (let a of t){
 		console.log(a);
 		var p = document.createElement("p");
-		p.innerHTML += a.sender + " owes " + a.receiver + " " + a.amt;
+		p.innerHTML += a.sender + " owes " + a.receiver + " " + f(a.amt);
 		text.appendChild(p);
 	}
 
@@ -621,6 +639,7 @@ function displayPreviousGames(items){
 			users[user_id] = convertObjectToUser(users[user_id]);
 			user_count += 1;
 			total_size += Math.max(users[user_id].net(), 0);
+			total_size = f(total_size);
 		}
 
 		var cur = [key, items[key].date, user_count, total_size];

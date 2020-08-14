@@ -1,7 +1,7 @@
 {
     "name": "Poker Now Ledger",
     "description": "Integrates a ledger of the game into the PokerNow Logs",
-    "version": "2.0",
+    "version": "2.0.2",
     "icons": {"128":"rsz_poker_png76.png"},
     "permissions": [
         "storage",
